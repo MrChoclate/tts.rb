@@ -19,5 +19,3 @@ module Tts
     concat(filename, readers)
   end
 end
-
-Tts::speak(ARGV[0].split, "out.wav")
