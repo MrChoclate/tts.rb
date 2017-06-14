@@ -10,7 +10,7 @@ module Tts
   end
 
   # load cmu dict
-  @@dict = Hash.new "K L EH1 M AH0 N T"
+  @@dict = Hash.new
   File.open("cmu.dict") do |file|
     file.each do |line|
       split = line.split
@@ -50,7 +50,11 @@ module Tts
   end
 
   def self.get_phonemes(word)
-    @@dict[word]
+    @@dict[word] || self.build_phonemes(word)
+  end
+
+  def self.build_phonemes(word)
+    `(cd g2p && env/bin/python train.py '#{word}')`
   end
 end
 

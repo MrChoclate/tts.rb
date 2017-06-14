@@ -2,7 +2,7 @@ require 'sequel'
 require 'byebug'
 
 module Tts
-  db_name = "tts_phil_chenevert.db"
+  db_name = ENV['DB_NAME'] || 'tts_phil_chenevert.db'
   DB = Sequel.connect("sqlite://#{db_name}")
 
   DB.create_table? :speakers do
