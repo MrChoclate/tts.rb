@@ -24,7 +24,6 @@ module Tts
     foreign_key :speaker_id, :speakers, deferrable: true
   end
 
-
   def self.find_begin(found_words, real_words)
     i = 0
     first_words = found_words.slice(0, CORRECT_IN_A_ROW).map {|w| w.word}

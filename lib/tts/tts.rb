@@ -11,8 +11,8 @@ module Tts
     reader = Reader.new(filename)
     rate = reader.native_format.sample_rate
 
-    reader.read(start * rate)
-    buffer = reader.read((stop - start) * rate)
+    reader.read((start * rate).to_i)
+    buffer = reader.read(((stop - start) * rate).to_i)
 
     buffer
   end
