@@ -4,13 +4,17 @@ include WaveFile
 
 module Tts
   def self.get_audio_buffer(word)
-    reader = Reader.new("#{word[:filename]}")
+    get_audio_buffer_from_file(word[:filename], word[:start], word[:stop])
+  end
+
+  def self.get_audio_buffer_from_file(filename, start, stop)
+    reader = Reader.new(filename)
     rate = reader.native_format.sample_rate
 
-    reader.read(word[:start] * rate)
-    buffer = reader.read((word[:stop] - word[:start]) * rate)
+    reader.read(start * rate)
+    buffer = reader.read((stop - start) * rate)
 
-    return buffer
+    buffer
   end
 
   def self.concat(filename, buffers)
@@ -27,6 +31,13 @@ module Tts
 
     while words && words.length > 0 do
       db_words = DB[:words].where(:word => words.first)
+
+      if db_words.count == 0
+        kept_words << words.first
+        words = words.slice(1, words.length)
+        next
+      end
+
       potential_next = DB[:words].where(:id => db_words.map {|w| w[:next]}, :word => words[len]).all
       while potential_next.length > 0 do
         len += 1

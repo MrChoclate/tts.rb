@@ -1,8 +1,8 @@
 require 'sequel'
+require 'byebug'
 
 module Tts
-  db_name = "tts.db"
-
+  db_name = "tts_phil_chenevert.db"
   DB = Sequel.connect("sqlite://#{db_name}")
 
   DB.create_table? :speakers do
@@ -18,13 +18,14 @@ module Tts
     Float :start
     Float :stop
     String :filename
+    TrueClass :can_recover
     foreign_key :next, :words
     foreign_key :previous, :words, deferrable: true
     foreign_key :speaker_id, :speakers, deferrable: true
   end
 
 
-  def find_begin(found_words, real_words)
+  def self.find_begin(found_words, real_words)
     i = 0
     first_words = found_words.slice(0, CORRECT_IN_A_ROW).map {|w| w.word}
     while first_words != real_words.slice(i, CORRECT_IN_A_ROW) do
@@ -34,7 +35,7 @@ module Tts
     i
   end
 
-  def process(found_words, real_words, start, file_path, speaker_id)
+  def self.process(found_words, real_words, start, file_path, speaker_id)
     real_words = real_words.slice(start, real_words.length)
     i = 0
     id = if DB[:words].all.length == 0 then 1 else DB[:words].max(:id) + 1 end
@@ -52,7 +53,7 @@ module Tts
       end
 
       word_id = id
-      to_add.push([id, word.word, word.start, word.stop, file_path, nil, nil])
+      to_add.push([id, word.word, word.start, word.stop, file_path, nil, nil, speaker_id])
       id += 1
 
       if is_next && old_word_id then
@@ -64,12 +65,18 @@ module Tts
       i += 1
     end
     DB.run("PRAGMA foreign_keys = 0")
-    DB[:words].import([:id, :word, :start, :stop, :filename, :next, :previous], to_add)
+    DB[:words].import([:id, :word, :start, :stop, :filename, :next, :previous, :speaker_id], to_add)
     DB.run("PRAGMA foreign_keys = 1")
   end
 
-  def save_db(found_words, real_words, wav_path, speaker_name)
-    speaker_id = "" # TODO
+  def self.save_db(found_words, real_words, wav_path, speaker_name)
+    speaker = DB[:speakers].where(name: speaker_name).first
+    if speaker
+      speaker_id = speaker[:id]
+    else
+      speaker_id = DB[:speakers].insert(name: speaker_name, language: "en")
+    end
+
     process(found_words, real_words, find_begin(found_words, real_words), wav_path, speaker_id)
   end
 end

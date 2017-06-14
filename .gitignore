@@ -14,3 +14,5 @@ data/
 todo/
 *.wav
 *.db
+
+*.py

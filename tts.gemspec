@@ -34,7 +34,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'wavefile'
   spec.add_dependency 'sequel'
   spec.add_dependency 'sqlite3'
+  spec.add_dependency 'rmds'
+  spec.add_dependency 'nokogiri'
 
+  spec.add_development_dependency 'ruby-prof'
   spec.add_development_dependency "bundler", "~> 1.14"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "byebug"

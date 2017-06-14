@@ -5,7 +5,7 @@ require_relative 'levenshtein/levenshtein'
 
 
 Word = Struct.new(:word, :start, :stop)
-CORRECT_IN_A_ROW = 3
+CORRECT_IN_A_ROW = 5
 # Create only one decoder to avoid allocating a lot of memory
 DECODER = Pocketsphinx::Decoder.new(Pocketsphinx::Configuration.default)
 
@@ -146,7 +146,6 @@ def process_since_begining(real_words, found_words, words, input_filename, ops)
           else # recover fail
             puts words[found_indice]
             new_words << words[found_indice]
-            extract_audio(input_filename, 'todo/' + correct_words.join(' ')[0, 100] + '.wav', false_words.first.start, false_words.last.stop)
           end
         end
       end
