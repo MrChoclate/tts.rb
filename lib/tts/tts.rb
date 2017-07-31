@@ -25,12 +25,12 @@ module Tts
     end
   end
 
-  def self.get_db_words(words)
+  def self.get_db_words(words, speaker_id)
     kept_words = []
     len = 1
 
     while words && words.length > 0 do
-      db_words = DB[:words].where(:word => words.first)
+      db_words = DB[:words].where(speaker_id: speaker_id, word: words.first)
 
       if db_words.count == 0
         kept_words << words.first
@@ -38,11 +38,11 @@ module Tts
         next
       end
 
-      potential_next = DB[:words].where(:id => db_words.map {|w| w[:next]}, :word => words[len]).all
+      potential_next = DB[:words].where(speaker_id: speaker_id, id: db_words.map {|w| w[:next]}, word: words[len]).all
       while potential_next.length > 0 do
         len += 1
         db_words = potential_next
-        potential_next = DB[:words].where(:id => db_words.map {|w| w[:next]}, :word => words[len]).all
+        potential_next = DB[:words].where(speaker_id: speaker_id, id: db_words.map {|w| w[:next]}, word: words[len]).all
       end
       to_kept = []
       kept = db_words.first

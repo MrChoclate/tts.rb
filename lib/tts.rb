@@ -20,10 +20,10 @@ module Tts
     end
   end
 
-  def self.speak(words, filename)
+  def self.speak(words, filename, speaker_id)
     words = words.map { |w| w.downcase }
 
-    readers = get_db_words(words).map do |w|
+    readers = get_db_words(words, speaker_id).map do |w|
       if w.is_a? String
         get_buffer_from_unknown(w)
       else
@@ -59,5 +59,5 @@ module Tts
 end
 
 if __FILE__ == $0
-  Tts::speak(ARGV[0].split, ARGV[1])
+  Tts::speak(ARGV[0].split, ARGV[1], ARGV[2].to_i)
 end

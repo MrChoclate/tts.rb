@@ -26,16 +26,20 @@ end
 def process_results(results, language, base_path)
   page =  Nokogiri::HTML(results)
   page.css('li').each do |li|
-    book_link = li.css('a').map { |a| a['href'] }.select { |href| href.match(/^http:\/\/librivox.org/) }.first
+    book_link = li.css('a').map { |a| a['href'] }.select { |href| href.match(/^https?:\/\/librivox.org/) }.first&.strip
     zip_link = li.css('a').map { |a| a['href'] }.select { |href| href.match(/.zip$/) }.first
     if book_link && zip_link
       process_book(book_link, zip_link, language, base_path)
+    else
+      puts '<not found>'
+      puts li.css('a').map { |a| a['href'] }
+      puts '<not found/>'
     end
   end
 end
 
 def process_book(book_link, zip_link, language, base_path)
-  book_link.gsub!(/http/, 'https')
+  book_link.gsub!(/http/, 'https') unless book_link.include? 'https'
   page = Nokogiri::HTML(open(book_link))
 
   book_title = page.css('div.page.book-page h1').first.text
@@ -44,11 +48,15 @@ def process_book(book_link, zip_link, language, base_path)
   escaped_speaker_name = escape(speaker_name)
 
 
-  online_text_href = page.css('a').select { |a| a['href'] && a.text && a['href'].match(/http:\/\/www.gutenberg.org/) && a.text.match('Online text') }.map { |a| a['href'] }.first
+  online_text_href = page.css('a').select { |a| a['href'] && a.text && a['href'].match(/https?:\/\/www.gutenberg.org/) && a.text.match('Online text') }.map { |a| a['href'] }.first
   if online_text_href
     gutenberg_id = online_text_href.match(/\d+$/)
     text = get_gutenberg_text(gutenberg_id)
-    return unless text
+    unless text
+      puts "text not found"
+      puts book_link
+      return
+    end
 
     base_path = File.join(base_path, escaped_speaker_name)
     mkdir base_path
@@ -73,8 +81,10 @@ end
 def get_gutenberg_text(id)
   uri = URI("http://www.gutenberg.org/files/#{id}/#{id}.txt")
   text = Net::HTTP.get(uri)
-  if text.strip == "<h1>404 Not Found</h1><p>File not found.</p>"
-    return nil
+  if text.length < 1000
+    uri = URI("http://www.gutenberg.org/cache/epub/#{id}/pg#{id}.txt")
+    text = Net::HTTP.get(uri)
+    return nil if text.length < 1000
   end
   text
 end

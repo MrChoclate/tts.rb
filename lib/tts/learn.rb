@@ -6,9 +6,10 @@ require_relative 'db'
 
 
 module Tts
-  audio_file = ARGV[1]
-  text_file = audio_file.split('/')[0..4].join("/") + "/book.txt"
+  audio_file = ARGV[0]
+  text_file = audio_file.split('/')[0..3].join("/") + "/book.txt"
   speaker_name = audio_file.split('/')[2]  # data/lang/speaker/bookname/wav/chapter1.wav
+  puts text_file, speaker_name
 
   parsed_words = read_output(sphinx(audio_file))
   real_words = File.read(text_file).downcase.strip.gsub(/’/, "'").gsub(/[—\-_]/, ' ').gsub(/[^a-zA-Z \n]/, '').split(/\W+/)
