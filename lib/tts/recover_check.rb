@@ -10,7 +10,7 @@ module Tts
   DB[:words].all.each do |word|
     filename = "#{word[:word]}_#{SecureRandom.uuid}.wav"
     concat(filename, [get_audio_buffer(word)])
-    word[:can_recover] = !!recover(filename, word[:word])
+    word[:can_recover] = !!recover(filename, word[:word], 'en')
     DB[:words].where(id: word[:id]).update(word)
     File.delete(filename)
   end

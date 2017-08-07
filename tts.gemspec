@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'sqlite3'
   spec.add_dependency 'rmds'
   spec.add_dependency 'nokogiri'
+  spec.add_dependency 'i18n'
 
   spec.add_development_dependency 'ruby-prof'
   spec.add_development_dependency "bundler", "~> 1.14"

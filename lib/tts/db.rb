@@ -4,6 +4,7 @@ require 'byebug'
 module Tts
   db_name = ENV['DB_NAME'] || 'tts_phil_chenevert.db'
   DB = Sequel.connect("sqlite://#{db_name}")
+  puts "Using db: #{db_name}"
 
   DB.create_table? :speakers do
     primary_key :id
@@ -68,12 +69,12 @@ module Tts
     DB.run("PRAGMA foreign_keys = 1")
   end
 
-  def self.save_db(found_words, real_words, wav_path, speaker_name)
+  def self.save_db(found_words, real_words, wav_path, speaker_name, language)
     speaker = DB[:speakers].where(name: speaker_name).first
     if speaker
       speaker_id = speaker[:id]
     else
-      speaker_id = DB[:speakers].insert(name: speaker_name, language: "en")
+      speaker_id = DB[:speakers].insert(name: speaker_name, language: language)
     end
 
     process(found_words, real_words, find_begin(found_words, real_words), wav_path, speaker_id)

@@ -4,6 +4,7 @@ require 'fileutils'
 require "tts/version"
 require "tts/tts"
 require "tts/db"
+require "tts/text_formater"
 
 module Tts
   class TtsError < StandardError
@@ -21,11 +22,13 @@ module Tts
   end
 
   def self.speak(words, filename, speaker_id)
-    words = words.map { |w| w.downcase }
+    words = words.map { |w| handle_accent(w).downcase }
+    speaker = DB[:speakers].where(id: speaker_id).first
+    language = speaker[:language]
 
     readers = get_db_words(words, speaker_id).map do |w|
       if w.is_a? String
-        get_buffer_from_unknown(w)
+        get_buffer_from_unknown(w, language)
       else
         get_audio_buffer(w)
       end
@@ -33,11 +36,11 @@ module Tts
     concat(filename, readers)
   end
 
-  def self.get_buffer_from_unknown(word)
-    phonemes = get_phonemes(word)
+  def self.get_buffer_from_unknown(word, language)
+    phonemes = get_phonemes(word, language)
 
     filename = "tmp.#{SecureRandom.uuid}.wav"
-    `python3 ptowav.py '#{phonemes}' #{filename}`
+    `python3 ptowav.py '#{phonemes}' #{filename} #{language}`
 
     converted_filename = "tmp.#{SecureRandom.uuid}.16khz.wav"
     `ffmpeg -i #{filename} -ar 16000 #{converted_filename}`
@@ -49,11 +52,13 @@ module Tts
     buffer
   end
 
-  def self.get_phonemes(word)
-    @@dict[word] || self.build_phonemes(word)
+  def self.get_phonemes(word, language)
+    #TODO: use language
+    @@dict[word] || self.build_phonemes(word, language)
   end
 
-  def self.build_phonemes(word)
+  def self.build_phonemes(word, language)
+    #TODO: use language
     `(cd g2p && env/bin/python train.py '#{word}')`
   end
 end

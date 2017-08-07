@@ -10,8 +10,28 @@ CORRECT_IN_A_ROW = 5
 DECODER = Pocketsphinx::Decoder.new(Pocketsphinx::Configuration.default)
 
 
-def sphinx(wav_path)
-  `pocketsphinx_continuous -infile "#{wav_path}" -time yes`
+def model_path
+  model_path = `pkg-config --variable=modeldir pocketsphinx`.strip
+end
+
+def french_dict
+  "#{model_path}/fr_FR/frenchWords62K.dic"
+end
+
+def french_hmm
+  "#{model_path}/fr_FR/french_f0/"
+end
+
+def french_lm
+  "#{model_path}/fr_FR/french3g62K.lm.bin"
+end
+
+def sphinx(wav_path, language)
+  if language == 'en' then
+    `pocketsphinx_continuous -infile "#{wav_path}" -time yes`
+  else
+    `pocketsphinx_continuous -dict #{french_dict} -hmm #{french_hmm} -lm #{french_lm} -infile "#{wav_path}" -time yes`
+  end
 end
 
 def read_output(output)
@@ -19,9 +39,9 @@ def read_output(output)
   sentence_end_time = nil
   sentence = old_sentence = ""
   output.each_line do |line|
-    if /[0-9]\./.match(line) && !/</.match(line) then
+    if /[0-9]\./.match(line) && !/[<\[]/.match(line) then
       split = line.split(/ +/)
-      word = split.first.gsub(/[^a-zA-Z \n]/, '')
+      word = format_sphinx_line(line)
       start, stop = split.slice(1, 2).map { |x| x.to_f }
       word = Word.new(word, start, stop)
       words.push(word)
@@ -78,9 +98,14 @@ def extract_audio(input_filename, output_filename, start, stop)
   end
 end
 
-def recover(audio_file, real_sentence)
+def recover(audio_file, real_sentence, language)
   configuration = Pocketsphinx::Configuration::Grammar.new do
     sentence real_sentence
+  end
+  if language == 'fr' then
+    configuration['dict'] = french_dict
+    configuration['lm'] = french_lm
+    configuration['hmm'] = french_hmm
   end
 
   begin
@@ -97,7 +122,7 @@ def recover(audio_file, real_sentence)
   end
 end
 
-def process_since_begining(real_words, found_words, words, input_filename, ops)
+def process_since_begining(real_words, found_words, words, input_filename, ops, language)
   real_start, found_start, ops_start = get_begining(ops)
   ops = ops.slice(ops_start, ops.length)
 
@@ -135,7 +160,7 @@ def process_since_begining(real_words, found_words, words, input_filename, ops)
           #puts "/correction"
         else # sphinx did not correctly split the words, try to recover
           extract_audio(input_filename, 'tmp.wav', false_words.first.start, false_words.last.stop)
-          w = recover('tmp.wav', correct_words.join(' '))
+          w = recover('tmp.wav', correct_words.join(' '), language)
           if w && w.first.start_frame == 0 then
             w.select! {|w| /^[a-z]/.match(w.word)}  # ignore silence
             w = w.map { |e| Word.new(e.word.gsub(/[^a-z]/, ''), false_words.first.start + e.start_frame * 0.01, false_words.first.start + e.end_frame * 0.01)}
