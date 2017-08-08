@@ -31,10 +31,6 @@ module Tts
 
     while words && words.length > 0 do
       db_words = DB[:words].where(speaker_id: speaker_id, word: words.first)
-      if db_words.count == 0
-        db_words = DB[:words].where(speaker_id: speaker_id, word: words.first)
-      end
-
 
       if db_words.count == 0
         kept_words << words.first

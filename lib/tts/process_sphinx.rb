@@ -18,6 +18,10 @@ def french_dict
   "#{model_path}/fr_FR/frenchWords62K.dic"
 end
 
+def english_dict
+  "tts.dict"
+end
+
 def french_hmm
   "#{model_path}/fr_FR/french_f0/"
 end
@@ -28,7 +32,7 @@ end
 
 def sphinx(wav_path, language)
   if language == 'en' then
-    `pocketsphinx_continuous -infile "#{wav_path}" -time yes`
+    `pocketsphinx_continuous -dict #{english_dict} -infile "#{wav_path}" -time yes`
   else
     `pocketsphinx_continuous -dict #{french_dict} -hmm #{french_hmm} -lm #{french_lm} -infile "#{wav_path}" -time yes`
   end
@@ -106,6 +110,8 @@ def recover(audio_file, real_sentence, language)
     configuration['dict'] = french_dict
     configuration['lm'] = french_lm
     configuration['hmm'] = french_hmm
+  else
+    configuration['dict'] = english_dict
   end
 
   begin
@@ -150,28 +156,18 @@ def process_since_begining(real_words, found_words, words, input_filename, ops, 
         #puts "with"
         #puts words[found_indice]
 
-        if correct_words.length == false_words.length
-          #puts "correction"
-          for i in 1..correct_words.length
-            words[found_last_correct + i].word = real_words[real_last_correct + i]
-            puts words[found_last_correct + i]
-            new_words << words[found_last_correct + i]
+        extract_audio(input_filename, 'tmp.wav', false_words.first.start, false_words.last.stop)
+        w = recover('tmp.wav', correct_words.join(' '), language)
+        if w && w.first.start_frame == 0 then
+          w.select! {|w| /^[a-z]/.match(w.word)}  # ignore silence
+          w = w.map { |e| Word.new(e.word.gsub(/[^a-z]/, ''), false_words.first.start + e.start_frame * 0.01, false_words.first.start + e.end_frame * 0.01)}
+          for i in 0..w.length - 1
+            puts w[i]
+            new_words << w[i]
           end
-          #puts "/correction"
-        else # sphinx did not correctly split the words, try to recover
-          extract_audio(input_filename, 'tmp.wav', false_words.first.start, false_words.last.stop)
-          w = recover('tmp.wav', correct_words.join(' '), language)
-          if w && w.first.start_frame == 0 then
-            w.select! {|w| /^[a-z]/.match(w.word)}  # ignore silence
-            w = w.map { |e| Word.new(e.word.gsub(/[^a-z]/, ''), false_words.first.start + e.start_frame * 0.01, false_words.first.start + e.end_frame * 0.01)}
-            for i in 0..w.length - 1
-              puts w[i]
-              new_words << w[i]
-            end
-          else # recover fail
-            puts words[found_indice]
-            new_words << words[found_indice]
-          end
+        else # recover fail
+          puts words[found_indice]
+          new_words << words[found_indice]
         end
       end
 

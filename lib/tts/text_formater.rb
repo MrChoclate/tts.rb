@@ -11,8 +11,8 @@ def format_book(text)
     .downcase
     .strip
     .gsub(/’/, "'")
-    .gsub(/[—\-_]/, ' ')
-    .gsub(/[^a-zA-Z \n]/, '')
+    .gsub(/[—\-_\n]/, ' ')
+    .gsub(/[^a-zA-Z' ]/, '')
     .split(/\W+/)
 end
 
