@@ -11,13 +11,23 @@ module Tts
   end
 
   # load cmu dict
-  @@dict = Hash.new
+  @@en_dict = Hash.new
   File.open("cmu.dict") do |file|
     file.each do |line|
       split = line.split
       word = split.first
       phonemes = split.slice(1, split.length).join(' ')
-      @@dict[word] = phonemes
+      @@en_dict[word] = phonemes
+    end
+  end
+
+  @@fr_dict = Hash.new
+  File.open("fr.dict") do |file|
+    file.each do |line|
+      split = line.split
+      word = split.first
+      phonemes = split.slice(1, split.length).join(' ')
+      @@en_dict[word] = phonemes
     end
   end
 
@@ -53,13 +63,15 @@ module Tts
   end
 
   def self.get_phonemes(word, language)
-    #TODO: use language
-    @@dict[word] || self.build_phonemes(word, language)
+    if language == "en" then
+      @@en_dict[word] || self.build_phonemes(word, language)
+    else
+      @@fr_dict[word] || self.build_phonemes(word, language)
+    end
   end
 
   def self.build_phonemes(word, language)
-    #TODO: use language
-    `(cd g2p && env/bin/python train.py '#{word}')`
+    `(cd g2p && env/bin/python train.py '#{word}' '#{language}')`
   end
 end
 
