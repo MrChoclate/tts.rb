@@ -1,5 +1,7 @@
 require 'pocketsphinx-ruby'
 require 'wavefile'
+require 'fileutils'
+require 'securerandom'
 include WaveFile
 require_relative 'levenshtein/levenshtein'
 
@@ -156,8 +158,11 @@ def process_since_begining(real_words, found_words, words, input_filename, ops, 
         #puts "with"
         #puts words[found_indice]
 
-        extract_audio(input_filename, 'tmp.wav', false_words.first.start, false_words.last.stop)
-        w = recover('tmp.wav', correct_words.join(' '), language)
+        filename = "tmp.#{SecureRandom.uuid}.wav"
+        extract_audio(input_filename, filename, false_words.first.start, false_words.last.stop)
+        w = recover(filename, correct_words.join(' '), language)
+        FileUtils.rm filename
+
         if w && w.first.start_frame == 0 then
           w.select! {|w| /^[a-z]/.match(w.word)}  # ignore silence
           w = w.map { |e| Word.new(e.word.gsub(/[^a-z]/, ''), false_words.first.start + e.start_frame * 0.01, false_words.first.start + e.end_frame * 0.01)}

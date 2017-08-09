@@ -22,7 +22,7 @@ module Tts
   end
 
   def self.speak(words, filename, speaker_id)
-    words = words.map { |w| handle_accent(w).downcase }
+    words = format_book(words)
     speaker = DB[:speakers].where(id: speaker_id).first
     language = speaker[:language]
 
@@ -64,5 +64,5 @@ module Tts
 end
 
 if __FILE__ == $0
-  Tts::speak(ARGV[0].split, ARGV[1], ARGV[2].to_i)
+  Tts::speak(ARGV[0], ARGV[1], ARGV[2].to_i)
 end

@@ -64,6 +64,18 @@ module Tts
       old_word_id = word_id
       i += 1
     end
+
+    # We strip isolated words at the end because they are artefacts
+    limit = to_add.length
+    to_add.reverse_each do |word|
+      if word[5] || word[6] then
+        break
+      else
+        limit -= 1
+      end
+    end
+    to_add = to_add[0...limit]
+
     DB.run("PRAGMA foreign_keys = 0")
     DB[:words].import([:id, :word, :start, :stop, :filename, :next, :previous, :speaker_id], to_add)
     DB.run("PRAGMA foreign_keys = 1")
