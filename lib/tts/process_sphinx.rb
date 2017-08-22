@@ -40,14 +40,14 @@ def sphinx(wav_path, language)
   end
 end
 
-def read_output(output)
+def read_output(output, language)
   words = []
   sentence_end_time = nil
   sentence = old_sentence = ""
   output.each_line do |line|
     if /[0-9]\./.match(line) && !/[<\[]/.match(line) then
       split = line.split(/ +/)
-      word = format_sphinx_line(line)
+      word = format_sphinx_line(line, language)
       start, stop = split.slice(1, 2).map { |x| x.to_f }
       word = Word.new(word, start, stop)
       words.push(word)

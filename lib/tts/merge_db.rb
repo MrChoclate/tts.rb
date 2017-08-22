@@ -23,21 +23,22 @@ end
 
 db_name_one = 'tts_phil_chenevert_copy.db'
 db_name_two = 'elizabeth_klett.db'
+db_name_three = 'nadine_eckertboulet.db'
 db_name_result = 'merged.db'
 
-def copy_db(db_one, to_merge, offset)
+def copy_db(db_one, to_merge, offset, speaker_offset)
   db_one[:speakers].all.each do |speaker|
     speaker_id = speaker[:id]
 
     to_merge[:speakers].insert(
-      id: speaker[:id] + offset,
+      id: speaker[:id] + speaker_offset,
       name: speaker[:name],
       language: speaker[:language]
     )
 
     words = db_one[:words].where(speaker_id: speaker_id).all
     words.each do |word|
-      word[:speaker_id] += offset
+      word[:speaker_id] += speaker_offset
       word[:id] += offset if word[:id]
       word[:next] += offset if word[:next]
       word[:previous] += offset if word[:previous]
@@ -52,11 +53,13 @@ end
 
 db_one = Sequel.connect("sqlite://#{db_name_one}")
 db_two = Sequel.connect("sqlite://#{db_name_two}")
+db_three = Sequel.connect("sqlite://#{db_name_three}")
 db_result = Sequel.connect("sqlite://#{db_name_result}")
 
 create_db(db_one)
 create_db(db_two)
 create_db(db_result)
 
-copy_db(db_one, db_result, 0)
-copy_db(db_two, db_result, 10000000)
+copy_db(db_one, db_result, 0, 0)
+copy_db(db_two, db_result, 10000000, 1)
+copy_db(db_three, db_result, 20000000, 2)

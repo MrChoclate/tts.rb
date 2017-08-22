@@ -7,13 +7,15 @@ require_relative 'text_formater'
 
 module Tts
   audio_file = ARGV[0]
+  exit(0) if DB[:words].where(filename: audio_file).first
+
   text_file = audio_file.split('/')[0..3].join("/") + "/book.txt"
   speaker_name = audio_file.split('/')[2]  # data/lang/speaker/bookname/wav/chapter1.wav
   language = audio_file.split('/')[1]
   puts text_file, speaker_name, language
 
-  parsed_words = read_output(sphinx(audio_file, language))
-  real_words = format_book(File.read(text_file))
+  parsed_words = read_output(sphinx(audio_file, language), language)
+  real_words = format_book(File.read(text_file), language)
 
   found_words = parsed_words.map { |word| word.word }
   ops = get_levenshtein_ops(real_words, found_words)
