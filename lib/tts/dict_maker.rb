@@ -2,7 +2,7 @@ require 'set'
 require_relative 'text_formater'
 
 dict = Set.new
-File.read('fr.dict').each_line do |line|
+File.read(`pkg-config --variable=modeldir pocketsphinx`.strip + '/fr_FR/frenchWords62K.dic').each_line do |line|
   dict.add(line.split()[0])
 end
 

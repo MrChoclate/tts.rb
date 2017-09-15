@@ -17,10 +17,10 @@ def format_book(text, lang)
     .gsub(/’/, "'")
     .gsub(/[—\-_\n]/, ' ')
     .gsub(/[^a-zA-ZÀ-ÿ' ]/, '')
-    .split(/\W+/)
+    .split(/\s/)
 end
 
 def format_sphinx_line(line, lang)
   split = line.split(/ +/)
-  handle_accent(split.first, lang).gsub(/[^a-zA-Z \n]/, '')
+  handle_accent(split.first, lang).gsub(/[^a-zA-ZÀ-ÿ \n]/, '')
 end

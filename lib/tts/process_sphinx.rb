@@ -17,7 +17,7 @@ def model_path
 end
 
 def french_dict
-  "#{model_path}/fr_FR/frenchWords62K.dic"
+  "fr.dict"
 end
 
 def english_dict
@@ -153,10 +153,10 @@ def process_since_begining(real_words, found_words, words, input_filename, ops, 
         correct_words = real_words.slice(real_last_correct + 1, real_indice - real_last_correct)
         false_words = words.slice(found_last_correct + 1, found_indice - found_last_correct)
 
-        #puts "correcting"
-        #puts false_words
-        #puts "with"
-        #puts words[found_indice]
+        puts "correcting"
+        puts false_words
+        puts "with"
+        puts words[found_indice]
 
         filename = "tmp.#{SecureRandom.uuid}.wav"
         extract_audio(input_filename, filename, false_words.first.start, false_words.last.stop)

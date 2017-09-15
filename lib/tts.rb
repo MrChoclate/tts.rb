@@ -32,9 +32,9 @@ module Tts
   end
 
   def self.speak(words, filename, speaker_id)
-    words = format_book(words)
     speaker = DB[:speakers].where(id: speaker_id).first
     language = speaker[:language]
+    words = format_book(words, language)
 
     readers = get_db_words(words, speaker_id).map do |w|
       if w.is_a? String
